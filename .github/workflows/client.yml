@@ -1,0 +1,44 @@
+name: client
+on:
+  push:
+    branches:
+      - reference
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+  
+    steps:
+      - name: Checkout source code.
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./my-agora-states-client
+      - name: Build
+        run: npm run build
+        working-directory: ./my-agora-states-client
+      - name: SHOW AWS CLI VERSION
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: true
+        run: |
+          aws --version
+
+      - name: Sync Bucket 
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: true
+        run: |
+          aws s3 sync \
+            --region ap-northeast-2 \
+            build s3://fe-13-yolodion-s3 \ 
+            --delete
+        working-directory: ./my-agora-states-client
+
+      
+        # 1. referenc 브랜치로 push를 할 경우, 단계별로 npm install, npm run build, Sync Bucket(deploy) 등을 순차적으로 자동 진행해주는 것.
+        # 2. Sync Bucket(deploy) - s3://뒤에는 배포하고자 하는 AWS 버킷 이름을 적을것.
+        # 3. Sync Bucket(deploy) -working-directory에는 작업한 파일의 경로를 적을것.
+        
+    
